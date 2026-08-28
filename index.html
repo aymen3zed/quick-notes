@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#151821">
+<meta name="application-name" content="Quick Notes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Quick Notes">
+    <title>Quick Notes</title>
+    <style>
+        :root {
+            --bg: #232733;
+            --bg-alt: #1c1f28;
+            --shadow-dark: #161920;
+            --shadow-light: #2f3544;
+            --text: #e7e9ee;
+            --text-muted: #8b91a3;
+            --accent: #a78bfa;      /* violet - secret / secondary */
+            --accent-2: #4fd1c5;    /* teal - primary */
+            --danger: #f87171;
+            --success: #34d399;
+            --radius-lg: 22px;
+            --radius-md: 14px;
+            --radius-sm: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--shadow-dark); border-radius: 10px; }
+
+        .container {
+            margin: 0 auto;
+            max-width: 1200px;
+            padding: 1rem;
+        }
+
+        @media (min-width: 640px) { .container { padding: 2rem; } }
+        @media (min-width: 768px) { .container { padding: 3rem; } }
+
+        /* Header */
+        header {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            header { flex-direction: row; align-items: center; }
+        }
+
+        .search-container {
+            position: relative;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) { .search-container { width: 40%; } }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            border: none;
+            border-radius: 9999px;
+            outline: none;
+            background: var(--bg);
+            color: var(--text);
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+            transition: box-shadow 0.2s ease;
+            text-align: left;
+        }
+
+        .search-input::placeholder { color: var(--text-muted); }
+
+        .search-input:focus {
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light), 0 0 0 2px var(--accent-2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.15rem;
+            height: 1.15rem;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) { .button-group { width: auto; } }
+
+        .btn {
+            padding: 0.65rem 1.4rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            background: var(--bg);
+            color: var(--text);
+            box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+            transition: box-shadow 0.15s ease, transform 0.1s ease, color 0.15s ease;
+            flex: 1;
+        }
+
+        @media (min-width: 768px) { .btn { flex: none; } }
+
+        .btn:hover { box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light); }
+        .btn:active {
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+            transform: translateY(1px);
+        }
+
+        .btn-primary { color: var(--accent-2); }
+        .btn-secondary { color: var(--accent); }
+        .btn-gray { color: var(--text-muted); }
+        .btn-danger { color: var(--danger); }
+
+        /* Filter bar */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 1.75rem;
+            align-items: center;
+        }
+
+        .tag-chip {
+            --tag-color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.95rem;
+            border-radius: 9999px;
+            border: none;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+            transition: box-shadow 0.15s ease, color 0.15s ease;
+        }
+
+        .tag-chip::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--tag-color);
+            flex-shrink: 0;
+        }
+
+        .tag-chip.no-dot::before { display: none; }
+
+        .tag-chip.active,
+        .tag-chip.selected {
+            box-shadow: inset 3px 3px 7px var(--shadow-dark), inset -3px -3px 7px var(--shadow-light);
+            color: var(--tag-color);
+        }
+
+        .filter-chip.manage-chip {
+            color: var(--text-muted);
+            border: 1px dashed var(--shadow-dark);
+        }
+
+        /* Notes Grid */
+        .notes-grid {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: 1fr;
+        }
+
+        @media (min-width: 640px) { .notes-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .notes-grid { grid-template-columns: repeat(3, 1fr); } }
+
+        .note-card {
+            background: var(--bg);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .note-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
+        }
+
+        .note-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.35rem;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .note-content {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-align: left;
+            white-space: pre-wrap;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .note-content.secret {
+            filter: blur(5px);
+            user-select: none;
+        }
+
+        /* Secret Note Styling */
+        .note-card.secret {
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light), 0 0 0 1.5px rgba(167, 139, 250, 0.5);
+        }
+
+        .note-card.secret .note-title {
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .note-card.secret .note-title::after {
+            content: "PRIVATE";
+            background: var(--bg);
+            color: var(--accent);
+            box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light);
+            font-size: 0.7rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 9999px;
+            flex-shrink: 0;
+        }
+
+        .note-card.secret .note-content { color: var(--accent); font-weight: 500; }
+
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.6rem;
+        }
+
+        .note-tag-pill {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            background: var(--bg);
+            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .note-tag-pill::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--dot-color, var(--text-muted));
+        }
+
+        .note-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .btn-small {
+            font-size: 0.72rem;
+            padding: 0.3rem 0.85rem;
+            border-radius: 9999px;
+            border: none;
+            background: var(--bg);
+            cursor: pointer;
+            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+            transition: box-shadow 0.15s ease;
+        }
+
+        .btn-small:hover { box-shadow: 2px 2px 4px var(--shadow-dark), -2px -2px 4px var(--shadow-light); }
+        .btn-small:active { box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); }
+
+        .btn-edit { color: var(--accent-2); }
+        .btn-delete { color: var(--danger); }
+        .btn-read-more { color: var(--text-muted); }
+        .btn-decrypt { color: var(--success); }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(10, 11, 15, 0.65);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            z-index: 50;
+        }
+
+        .modal.show { display: flex; }
+
+        .modal-content {
+            background: var(--bg);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            width: 100%;
+            max-width: 42rem;
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+            box-shadow: 14px 14px 28px var(--shadow-dark), -14px -14px 28px var(--shadow-light);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal.show .modal-content { transform: scale(1); }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.1rem;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            text-align: left;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            outline: none;
+            background: var(--bg);
+            color: var(--text);
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+            transition: box-shadow 0.2s ease;
+            text-align: left;
+            margin-bottom: 1rem;
+        }
+
+        .form-input::placeholder { color: var(--text-muted); }
+
+        .form-input:focus {
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light), 0 0 0 2px var(--accent-2);
+        }
+
+        .form-textarea { resize: vertical; min-height: 8rem; }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn-cancel {
+            padding: 0.6rem 1.5rem;
+            border: none;
+            border-radius: 9999px;
+            background: var(--bg);
+            color: var(--text-muted);
+            cursor: pointer;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+        }
+
+        .btn-cancel:active { box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); }
+
+        .btn-save {
+            padding: 0.6rem 1.5rem;
+            background: var(--bg);
+            color: var(--success);
+            border: none;
+            border-radius: 9999px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+        }
+
+        .btn-save:active { box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            grid-column: 1 / -1;
+            padding: 2rem;
+        }
+
+        .password-modal .modal-content { max-width: 24rem; text-align: center; }
+
+        .password-description { color: var(--text-muted); margin-bottom: 1rem; }
+
+        .hidden { display: none !important; }
+
+        .note-content-full {
+            color: var(--text);
+            text-align: left;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            max-height: 70vh;
+        }
+
+        .secret-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; left: 0; bottom: 0;
+            background: var(--bg);
+            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+            transition: 0.3s;
+            border-radius: 999px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 4px; bottom: 4px;
+            background: var(--text-muted);
+            box-shadow: 2px 2px 4px var(--shadow-dark);
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider:before { transform: translateX(24px); background: var(--accent); }
+
+        .secret-key-container { margin-bottom: 1rem; display: none; }
+
+        /* Tags picker inside note modal */
+        .note-tags-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.6rem;
+            min-height: 1.5rem;
+        }
+
+        .no-tags-msg { color: var(--text-muted); font-size: 0.82rem; }
+
+        .manage-tags-link {
+            background: none;
+            border: none;
+            color: var(--accent-2);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto 1.1rem 0;
+            padding: 0;
+        }
+
+        .manage-tags-link:hover { text-decoration: underline; }
+
+        /* Tags manager modal */
+        .tags-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 1.25rem;
+            max-height: 40vh;
+            overflow-y: auto;
+        }
+
+        .tag-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 0.55rem 0.85rem;
+            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+        }
+
+        .tag-color-input {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 50%;
+            padding: 0;
+            background: none;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .tag-color-input::-webkit-color-swatch-wrapper { padding: 0; border-radius: 50%; }
+        .tag-color-input::-webkit-color-swatch { border: none; border-radius: 50%; }
+
+        .tag-name {
+            flex: 1;
+            text-align: left;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .tag-name:hover { text-decoration: underline dotted; }
+
+        .tag-delete-btn {
+            background: var(--bg);
+            border: none;
+            color: var(--danger);
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+            flex-shrink: 0;
+        }
+
+        .tag-delete-btn:active { box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light); }
+
+        .empty-tags-msg { color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 0.5rem 0; }
+
+        .tag-add-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .tag-add-row .form-input { margin-bottom: 0; }
+
+        .tag-add-row input[type="color"] {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            padding: 0;
+            background: none;
+            cursor: pointer;
+            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+            flex-shrink: 0;
+        }
+
+        .tag-add-row input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; border-radius: 50%; }
+        .tag-add-row input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
+    
+/* Professional UI overrides */
+:root{--bg:#151821;--bg-alt:#1b1f29;--shadow-dark:#0c0f15;--shadow-light:#252b38;--border:#2c3342}
+body{letter-spacing:.005em}
+.note-card,.btn,.btn-small,.tag-chip,.note-tag-pill,.modal-content,.tag-row,.btn-cancel,.btn-save,.form-input,.search-input{
+ box-shadow:0 8px 24px rgba(0,0,0,.18);border:1px solid var(--border)
+}
+.note-card:hover{box-shadow:0 14px 32px rgba(0,0,0,.25);transform:translateY(-3px)}
+.btn:hover,.btn-small:hover{transform:translateY(-1px)}
+.search-input,.form-input{background:var(--bg-alt)}
+.note-meta{font-size:.72rem;color:var(--text-muted);margin-top:.75rem}
+.note-card .note-title{letter-spacing:-.01em}
+.note-actions{justify-content:flex-end}
+@media(max-width:700px){
+ .container{padding-bottom:90px}
+ .notes-grid{grid-template-columns:1fr}
+ .note-card{padding:1rem}
+ .modal{padding:0;align-items:stretch}
+ .modal-content{max-width:none;width:100%;height:100%;max-height:none;border-radius:0;padding:1.25rem;padding-top:calc(1.25rem + env(safe-area-inset-top));overflow-y:auto}
+ .form-textarea{min-height:calc(100vh - 300px)}
+ .fab{display:grid;place-items:center}
+}
+
+</style>
+
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/icon-192.svg">
+<script>
+  navigator.serviceWorker.register("./sw.js", {
+    scope: "./"
+  });
+</script>
+</body></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search" class="search-input">
+                <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+            <div class="button-group">
+                <button id="newNoteBtn" class="btn btn-primary">New Note</button>
+                <button id="manageTagsBtn" class="btn btn-secondary">Tags</button>
+                <button id="exportBtn" class="btn btn-secondary">Export</button>
+                <button id="importBtn" class="btn btn-gray">Import</button>
+            </div>
+        </header>
+
+        <!-- Filter bar -->
+        <div class="toolbar-row">
+  <div id="filterBar" class="filter-bar"></div>
+  <label class="sort-control">Sort
+    <select id="sortSelect">
+      <option value="updated">Recently edited</option>
+      <option value="created">Recently created</option>
+      <option value="title">Title</option>
+    </select>
+  </label>
+</div>
+
+        <!-- Notes Grid -->
+        <button id="fab" class="fab" aria-label="New note">+</button>
+        <main id="notesContainer" class="notes-grid">
+            <!-- Notes will be rendered here -->
+        </main>
+
+        <!-- Note Modal -->
+        <div id="noteModal" class="modal">
+            <div class="modal-content">
+                <h2 id="modalTitle" class="modal-title">New Note</h2>
+
+                <div class="secret-toggle">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="secretToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span>Secret Note</span>
+                </div>
+
+                <div id="secretKeyContainer" class="secret-key-container">
+                    <input type="password" id="secretKeyInput" placeholder="Encryption Key" class="form-input">
+                </div>
+
+                <input type="text" id="noteTitle" placeholder="Note title" class="form-input">
+                <textarea id="noteContent" placeholder="Note content..." class="form-input form-textarea"></textarea>
+
+                <span class="form-label">Tags</span>
+                <div id="noteTagsPicker" class="note-tags-picker"></div>
+                <button type="button" id="openTagsFromNoteBtn" class="manage-tags-link">+ إدارة Tags</button>
+
+                <div class="modal-actions">
+                    <button id="cancelBtn" class="btn-cancel">Cancel</button>
+                    <button id="saveBtn" class="btn-save">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Read More Modal -->
+        <div id="readMoreModal" class="modal">
+            <div class="modal-content">
+                <h2 id="readMoreTitle" class="modal-title"></h2>
+                <p id="readMoreContent" class="note-content-full"></p>
+                <div class="modal-actions">
+                    <button id="readMoreCloseBtn" class="btn-cancel">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Modal -->
+        <div id="passwordModal" class="modal password-modal">
+            <div class="modal-content">
+                <h2 class="modal-title" id="passwordModalTitle"></h2>
+                <p class="password-description">Enter the password to encrypt/decrypt</p>
+                <input type="password" id="passwordInput" placeholder="Password" class="form-input">
+                <div class="modal-actions">
+                    <button id="passwordCancelBtn" class="btn-cancel">Cancel</button>
+                    <button id="passwordConfirmBtn" class="btn btn-primary">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decrypt Modal -->
+        <div id="decryptModal" class="modal password-modal">
+            <div class="modal-content">
+                <h2 class="modal-title">Decrypt Secret Note</h2>
+                <p class="password-description">ادخل Encryption Key لقراءة هذه الملاحظة</p>
+                <input type="password" id="decryptKeyInput" placeholder="Encryption Key" class="form-input">
+                <div class="modal-actions">
+                    <button id="decryptCancelBtn" class="btn-cancel">Cancel</button>
+                    <button id="decryptConfirmBtn" class="btn btn-primary">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tags Manager Modal -->
+        <div id="tagsModal" class="modal">
+            <div class="modal-content">
+                <h2 class="modal-title">إدارة Tags</h2>
+                <div id="tagsList" class="tags-list"></div>
+                <div class="tag-add-row">
+                    <input type="text" id="newTagName" placeholder="New tag name" class="form-input">
+                    <input type="color" id="newTagColor" value="#4fd1c5">
+                    <button id="addTagBtn" class="btn btn-primary" style="flex:none;">Add</button>
+                </div>
+                <div class="modal-actions">
+                    <button id="tagsCloseBtn" class="btn-cancel">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <input type="file" id="fileInput" class="hidden" accept=".json">
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM elements
+            const notesContainer = document.getElementById('notesContainer');
+            const newNoteBtn = document.getElementById('newNoteBtn');
+            const exportBtn = document.getElementById('exportBtn');
+            const importBtn = document.getElementById('importBtn');
+            const fileInput = document.getElementById('fileInput');
+            const noteModal = document.getElementById('noteModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const noteTitleInput = document.getElementById('noteTitle');
+            const noteContentTextarea = document.getElementById('noteContent');
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const searchInput = document.getElementById('searchInput');
+            const readMoreModal = document.getElementById('readMoreModal');
+            const readMoreTitle = document.getElementById('readMoreTitle');
+            const readMoreContent = document.getElementById('readMoreContent');
+            const readMoreCloseBtn = document.getElementById('readMoreCloseBtn');
+            const passwordModal = document.getElementById('passwordModal');
+            const passwordModalTitle = document.getElementById('passwordModalTitle');
+            const passwordInput = document.getElementById('passwordInput');
+            const passwordConfirmBtn = document.getElementById('passwordConfirmBtn');
+            const passwordCancelBtn = document.getElementById('passwordCancelBtn');
+            const secretToggle = document.getElementById('secretToggle');
+            const secretKeyContainer = document.getElementById('secretKeyContainer');
+            const secretKeyInput = document.getElementById('secretKeyInput');
+            const decryptModal = document.getElementById('decryptModal');
+            const decryptKeyInput = document.getElementById('decryptKeyInput');
+            const decryptConfirmBtn = document.getElementById('decryptConfirmBtn');
+            const decryptCancelBtn = document.getElementById('decryptCancelBtn');
+            const filterBar = document.getElementById('filterBar');
+            const noteTagsPicker = document.getElementById('noteTagsPicker');
+            const openTagsFromNoteBtn = document.getElementById('openTagsFromNoteBtn');
+            const manageTagsBtn = document.getElementById('manageTagsBtn');
+            const tagsModal = document.getElementById('tagsModal');
+            const tagsList = document.getElementById('tagsList');
+            const newTagName = document.getElementById('newTagName');
+            const newTagColor = document.getElementById('newTagColor');
+            const addTagBtn = document.getElementById('addTagBtn');
+            const tagsCloseBtn = document.getElementById('tagsCloseBtn');
+
+            let currentNoteId = null;
+            let currentAction = '';
+            let pendingPassword = '';
+            let currentDecryptNote = null;
+            let tags = getTags();
+            let activeTagFilters = new Set();
+            let modalSelectedTags = new Set();
+            let reopenNoteModalAfterTags = false;
+
+            // --- Crypto Functions (AES-GCM + PBKDF2) ---
+            async function deriveKey(password, salt) {
+                const baseKey = await crypto.subtle.importKey(
+                    'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']
+                );
+                return crypto.subtle.deriveKey(
+                    { name:'PBKDF2', salt, iterations:150000, hash:'SHA-256' },
+                    baseKey, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
+                );
+            }
+            const bytesToBase64 = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes)));
+            const base64ToBytes = str => Uint8Array.from(atob(str), c => c.charCodeAt(0));
+
+            async function encryptText(text, password) {
+                const salt = crypto.getRandomValues(new Uint8Array(16));
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const key = await deriveKey(password, salt);
+                const encrypted = await crypto.subtle.encrypt(
+                    { name:'AES-GCM', iv }, key, new TextEncoder().encode(text)
+                );
+                return { cipher: bytesToBase64(encrypted), salt: bytesToBase64(salt), iv: bytesToBase64(iv) };
+            }
+
+            async function decryptText(payload, password) {
+                try {
+                    const key = await deriveKey(password, base64ToBytes(payload.salt));
+                    const decrypted = await crypto.subtle.decrypt(
+                        { name:'AES-GCM', iv:base64ToBytes(payload.iv) },
+                        key, base64ToBytes(payload.cipher)
+                    );
+                    return new TextDecoder().decode(decrypted);
+                } catch(e) { return null; }
+            }
+
+            async function prepareNotesForExport(notes, password) {
+                const exportNotes = [];
+                for (const note of notes) {
+                    exportNotes.push({
+                        id: note.id, title: note.title,
+                        content: note.isSecret ? note.content : await encryptText(note.content, password),
+                        isSecret: !!note.isSecret, tagIds: note.tagIds || [],
+                        createdAt: note.createdAt || Date.now(), updatedAt: note.updatedAt || Date.now(),
+                        pinned: !!note.pinned
+                    });
+                }
+                return exportNotes;
+            }
+
+            async function decryptImportedNotes(exportedNotes, password) {
+                const result = [];
+                for (const note of exportedNotes) {
+                    if (note.isSecret) {
+                        result.push(note);
+                    } else {
+                        const decrypted = await decryptText(
+                            note.content || {cipher:note.hashedContent,salt:note.salt,iv:note.iv}, password
+                        );
+                        if (decrypted === null) return null;
+                        result.push({...note, content:decrypted});
+                    }
+                }
+                return result;
+            }
+
+            // --- Utility Functions ---
+            const generateId = () => '_' + Math.random().toString(36).substr(2, 9);
+
+            const getNotes = () => {
+                const notes = localStorage.getItem('notes');
+                const parsed = notes ? JSON.parse(notes) : [];
+                return parsed.map(n => ({
+                    ...n,
+                    createdAt: n.createdAt || Date.now(),
+                    updatedAt: n.updatedAt || n.createdAt || Date.now(),
+                    pinned: !!n.pinned
+                }));
+            };
+
+            const saveNotes = (notes) => {
+                localStorage.setItem('notes', JSON.stringify(notes));
+            };
+
+            function getTags() {
+                const stored = localStorage.getItem('tags');
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            function saveTags(t) {
+                localStorage.setItem('tags', JSON.stringify(t));
+            }
+
+            const getTagById = (id) => tags.find(t => t.id === id);
+
+            // --- Tag Filter Bar ---
+            const renderFilterBar = () => {
+                filterBar.innerHTML = '';
+
+                const allChip = document.createElement('button');
+                allChip.type = 'button';
+                allChip.className = 'tag-chip filter-chip no-dot' + (activeTagFilters.size === 0 ? ' active' : '');
+                allChip.textContent = 'All';
+                allChip.addEventListener('click', () => {
+                    activeTagFilters.clear();
+                    renderFilterBar();
+                    applyFilters();
+                });
+                filterBar.appendChild(allChip);
+
+                tags.forEach(tag => {
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = 'tag-chip filter-chip' + (activeTagFilters.has(tag.id) ? ' active' : '');
+                    chip.style.setProperty('--tag-color', tag.color);
+                    chip.textContent = tag.name;
+                    chip.addEventListener('click', () => {
+                        if (activeTagFilters.has(tag.id)) {
+                            activeTagFilters.delete(tag.id);
+                        } else {
+                            activeTagFilters.add(tag.id);
+                        }
+                        renderFilterBar();
+                        applyFilters();
+                    });
+                    filterBar.appendChild(chip);
+                });
+
+                const manageChip = document.createElement('button');
+                manageChip.type = 'button';
+                manageChip.className = 'tag-chip filter-chip manage-chip no-dot';
+                manageChip.textContent = '+ إدارة Tags';
+                manageChip.addEventListener('click', () => showTagsModal(false));
+                filterBar.appendChild(manageChip);
+            };
+
+            const getFilteredNotes = () => {
+                const searchTerm = searchInput.value.toLowerCase();
+                const notes = getNotes();
+                return notes.filter(note => {
+                    const matchesSearch = note.title.toLowerCase().includes(searchTerm) ||
+                        (!note.isSecret && note.content.toLowerCase().includes(searchTerm));
+                    const noteTagIds = note.tagIds || [];
+                    const matchesTags = activeTagFilters.size === 0 ||
+                        noteTagIds.some(id => activeTagFilters.has(id));
+                    return matchesSearch && matchesTags;
+                });
+            };
+
+            const applyFilters = () => {
+                const sort = document.getElementById('sortSelect')?.value || 'updated';
+                let filtered = getFilteredNotes();
+                filtered.sort((a,b) => {
+                    if (a.pinned !== b.pinned) return b.pinned - a.pinned;
+                    if (sort === 'title') return a.title.localeCompare(b.title);
+                    if (sort === 'created') return (b.createdAt||0) - (a.createdAt||0);
+                    return (b.updatedAt||0) - (a.updatedAt||0);
+                });
+                renderNotes(filtered);
+            };
+
+            // Escape user-entered text before inserting it into innerHTML.
+            const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({
+                '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+            }[ch]));
+
+            // --- Note Card ---
+            const createNoteCard = (note) => {
+                const noteCard = document.createElement('div');
+                noteCard.className = note.isSecret ? 'note-card secret' : 'note-card';
+                noteCard.dataset.id = note.id;
+
+                const isSecret = note.isSecret || false;
+                let contentText = typeof note.content === 'string' ? note.content : '';
+
+                if (isSecret) {
+                    contentText = "Private note. Unlock it with the encryption key to view the content.";
+                }
+
+                const showReadMore = contentText.split('\n').length > 4 || contentText.length > 200;
+
+                const noteTags = (note.tagIds || []).map(id => getTagById(id)).filter(Boolean);
+                const tagsHtml = noteTags.length > 0
+                    ? `<div class="note-tags">${noteTags.map(t => `<span class="note-tag-pill" style="--dot-color:${t.color}">${t.name}</span>`).join('')}</div>`
+                    : '';
+
+                noteCard.innerHTML = `
+                    <div>
+                        <h3 class="note-title">${escapeHtml(note.title)}</h3>
+                        ${note.pinned ? '<span class="pin-indicator" title="Pinned">★</span>' : ''}
+                        <p class="note-content ${isSecret ? 'secret' : ''}">${escapeHtml(contentText)}</p>
+                        ${tagsHtml}
+                    </div>
+                    <div class="note-actions">
+                        <button class="btn-small pinBtn">${note.pinned ? 'Unpin' : 'Pin'}</button>
+                        <button class="btn-small btn-edit editBtn">Edit</button>
+                        <button class="btn-small btn-delete deleteBtn">Delete</button>
+                        ${isSecret ? '<button class="btn-small btn-decrypt decryptBtn">Decrypt</button>' : ''}
+                        ${showReadMore && !isSecret ? '<button class="btn-small btn-read-more readMoreBtn">Read More</button>' : ''}
+                    </div>
+                `;
+
+                noteCard.querySelector('.pinBtn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const notes = getNotes();
+                    const n = notes.find(x => x.id === note.id);
+                    if (n) { n.pinned = !n.pinned; n.updatedAt = Date.now(); saveNotes(notes); applyFilters(); }
+                });
+
+                noteCard.querySelector('.editBtn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showModal('edit', note);
+                });
+
+                noteCard.querySelector('.deleteBtn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteNote(note.id);
+                });
+
+                if (isSecret) {
+                    noteCard.querySelector('.decryptBtn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        showDecryptModal(note);
+                    });
+                } else if (showReadMore) {
+                    noteCard.querySelector('.readMoreBtn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        showReadMoreModal(note);
+                    });
+                }
+
+                return noteCard;
+            };
+
+            const renderNotes = (filteredNotes = null) => {
+                const notes = filteredNotes || getNotes();
+                notesContainer.innerHTML = '';
+
+                if (notes.length === 0) {
+                    notesContainer.innerHTML = '<div class="empty-state">لا توجد ملاحظات. انقر على "New Note" لAdd واحدة.</div>';
+                } else {
+                    notes.forEach(note => {
+                        notesContainer.appendChild(createNoteCard(note));
+                    });
+                }
+            };
+
+            // --- Note Tags Picker (inside note modal) ---
+            const renderNoteTagsPicker = () => {
+                noteTagsPicker.innerHTML = '';
+                if (tags.length === 0) {
+                    noteTagsPicker.innerHTML = '<span class="no-tags-msg">لا توجد وسوم بعد. أضف وسماً من "إدارة Tags".</span>';
+                    return;
+                }
+                tags.forEach(tag => {
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = 'tag-chip' + (modalSelectedTags.has(tag.id) ? ' selected' : '');
+                    chip.style.setProperty('--tag-color', tag.color);
+                    chip.textContent = tag.name;
+                    chip.addEventListener('click', () => {
+                        if (modalSelectedTags.has(tag.id)) {
+                            modalSelectedTags.delete(tag.id);
+                        } else {
+                            modalSelectedTags.add(tag.id);
+                        }
+                        renderNoteTagsPicker();
+                    });
+                    noteTagsPicker.appendChild(chip);
+                });
+            };
+
+            // --- Tags Manager Modal ---
+            const renderTagsList = () => {
+                tagsList.innerHTML = '';
+                if (tags.length === 0) {
+                    tagsList.innerHTML = '<div class="empty-tags-msg">No tags yet. Add your first tag below.</div>';
+                    return;
+                }
+                tags.forEach(tag => {
+                    const row = document.createElement('div');
+                    row.className = 'tag-row';
+
+                    const colorInput = document.createElement('input');
+                    colorInput.type = 'color';
+                    colorInput.className = 'tag-color-input';
+                    colorInput.value = tag.color;
+                    colorInput.addEventListener('input', () => {
+                        tag.color = colorInput.value;
+                        saveTags(tags);
+                    });
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'tag-name';
+                    nameSpan.textContent = tag.name;
+                    nameSpan.title = 'Click to rename tag';
+                    nameSpan.addEventListener('click', () => {
+                        const newName = prompt('New tag name', tag.name);
+                        if (newName && newName.trim()) {
+                            tag.name = newName.trim();
+                            saveTags(tags);
+                            renderTagsList();
+                        }
+                    });
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'tag-delete-btn';
+                    deleteBtn.textContent = '✕';
+                    deleteBtn.title = 'Delete tag';
+                    deleteBtn.addEventListener('click', () => {
+                        if (!confirm('Are you sure you want to delete this tag? It will be removed from all notes.')) return;
+                        tags = tags.filter(t => t.id !== tag.id);
+                        saveTags(tags);
+                        activeTagFilters.delete(tag.id);
+                        modalSelectedTags.delete(tag.id);
+
+                        const notes = getNotes();
+                        notes.forEach(n => {
+                            if (n.tagIds) n.tagIds = n.tagIds.filter(id => id !== tag.id);
+                        });
+                        saveNotes(notes);
+
+                        renderTagsList();
+                    });
+
+                    row.appendChild(colorInput);
+                    row.appendChild(nameSpan);
+                    row.appendChild(deleteBtn);
+                    tagsList.appendChild(row);
+                });
+            };
+
+            const showTagsModal = (reopenNote) => {
+                reopenNoteModalAfterTags = !!reopenNote;
+                if (reopenNote) noteModal.classList.remove('show');
+                renderTagsList();
+                newTagName.value = '';
+                newTagColor.value = '#4fd1c5';
+                tagsModal.classList.add('show');
+            };
+
+            const hideTagsModal = () => {
+                tagsModal.classList.remove('show');
+                renderFilterBar();
+                applyFilters();
+                if (reopenNoteModalAfterTags) {
+                    reopenNoteModalAfterTags = false;
+                    renderNoteTagsPicker();
+                    noteModal.classList.add('show');
+                }
+            };
+
+            addTagBtn.addEventListener('click', () => {
+                const name = newTagName.value.trim();
+                if (!name) return;
+                const color = newTagColor.value;
+                tags.push({ id: generateId(), name, color });
+                saveTags(tags);
+                newTagName.value = '';
+                renderTagsList();
+                renderNoteTagsPicker();
+            });
+
+            newTagName.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addTagBtn.click();
+                }
+            });
+
+            tagsCloseBtn.addEventListener('click', hideTagsModal);
+            manageTagsBtn.addEventListener('click', () => showTagsModal(false));
+            openTagsFromNoteBtn.addEventListener('click', () => showTagsModal(true));
+
+            tagsModal.addEventListener('click', (e) => {
+                if (e.target === tagsModal) hideTagsModal();
+            });
+
+            // --- Modal Functions ---
+            const showModal = (mode, note = null) => {
+                if (mode === 'add') {
+                    modalTitle.textContent = 'New Note';
+                    noteTitleInput.value = '';
+                    noteContentTextarea.value = '';
+                    secretToggle.checked = false;
+                    secretKeyContainer.style.display = 'none';
+                    secretKeyInput.value = '';
+                    currentNoteId = null;
+                    modalSelectedTags = new Set();
+                } else if (mode === 'edit' && note) {
+                    modalTitle.textContent = 'Edit Note';
+                    noteTitleInput.value = note.title;
+
+                    if (note.isSecret) {
+                        secretToggle.checked = true;
+                        secretKeyContainer.style.display = 'block';
+                        noteContentTextarea.value = '';
+                    } else {
+                        secretToggle.checked = false;
+                        secretKeyContainer.style.display = 'none';
+                        noteContentTextarea.value = note.content;
+                    }
+
+                    currentNoteId = note.id;
+                    modalSelectedTags = new Set(note.tagIds || []);
+                }
+                renderNoteTagsPicker();
+                noteModal.classList.add('show');
+            };
+
+            const hideModal = () => {
+                noteModal.classList.remove('show');
+            };
+
+            const showReadMoreModal = (note) => {
+                readMoreTitle.textContent = note.title;
+                readMoreContent.textContent = note.content;
+                readMoreModal.classList.add('show');
+            };
+
+            const hideReadMoreModal = () => {
+                readMoreModal.classList.remove('show');
+            };
+
+            const showDecryptModal = (note) => {
+                currentDecryptNote = note;
+                decryptKeyInput.value = '';
+                decryptModal.classList.add('show');
+            };
+
+            const hideDecryptModal = () => {
+                decryptModal.classList.remove('show');
+                currentDecryptNote = null;
+            };
+
+            const showPasswordModal = (action) => {
+                currentAction = action;
+                passwordModalTitle.textContent = action === 'export' ? 'Export الملاحظات' : 'Import الملاحظات';
+                passwordInput.value = '';
+                passwordModal.classList.add('show');
+            };
+
+            const hidePasswordModal = () => {
+                passwordModal.classList.remove('show');
+            };
+
+            secretToggle.addEventListener('change', () => {
+                secretKeyContainer.style.display = secretToggle.checked ? 'block' : 'none';
+            });
+
+
+            // Autosave edits to existing non-secret notes after a short pause.
+            let autosaveTimer = null;
+            function scheduleAutosave() {
+                if (!currentNoteId || secretToggle.checked) return;
+                clearTimeout(autosaveTimer);
+                const state = document.getElementById('saveState');
+                if (state) state.textContent = 'Unsaved changes';
+                autosaveTimer = setTimeout(() => {
+                    const notes = getNotes();
+                    const idx = notes.findIndex(n => n.id === currentNoteId);
+                    if (idx === -1) return;
+                    notes[idx].title = noteTitleInput.value.trim() || 'Untitled';
+                    notes[idx].content = noteContentTextarea.value.trim() || 'No content.';
+                    notes[idx].updatedAt = Date.now();
+                    saveNotes(notes);
+                    applyFilters();
+                    if (state) { state.textContent = 'Saved'; state.style.color = 'var(--success)'; }
+                }, 900);
+            }
+            noteTitleInput.addEventListener('input', scheduleAutosave);
+            noteContentTextarea.addEventListener('input', scheduleAutosave);
+
+            // --- Event Handlers ---
+            newNoteBtn.addEventListener('click', () => showModal('add'));
+            exportBtn.addEventListener('click', () => showPasswordModal('export'));
+            importBtn.addEventListener('click', () => showPasswordModal('import'));
+
+            passwordConfirmBtn.addEventListener('click', async () => {
+                const password = passwordInput.value.trim();
+                if (!password) return;
+
+                if (currentAction === 'export') {
+                    const notes = getNotes();
+                    const exportedNotes = await prepareNotesForExport(notes, password);
+                    const exportData = { version: 3, app: 'Quick Notes', tags: tags, notes: exportedNotes };
+                    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'quick-notes-backup.json';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    hidePasswordModal();
+                } else if (currentAction === 'import') {
+                    pendingPassword = password;
+                    hidePasswordModal();
+                    fileInput.click();
+                }
+            });
+
+            passwordCancelBtn.addEventListener('click', hidePasswordModal);
+
+            fileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    try {
+                        const importedData = JSON.parse(event.target.result);
+                        const isLegacyArray = Array.isArray(importedData);
+                        const importedTags = isLegacyArray ? [] : (importedData.tags || []);
+                        const notesArray = isLegacyArray ? importedData : (importedData.notes || []);
+
+                        const decryptedNotes = await decryptImportedNotes(notesArray, pendingPassword);
+
+                        if (decryptedNotes) {
+                            saveNotes(decryptedNotes);
+                            if (importedTags.length > 0) {
+                                tags = importedTags;
+                                saveTags(tags);
+                            }
+                            renderFilterBar();
+                            applyFilters();
+                            alert('تم Import الملاحظات بنجاح!');
+                        } else {
+                            alert('فشل Decrypt. Password غير صحيحة أو الملف تالف.');
+                        }
+                    } catch (e) {
+                        alert('Error reading file. Make sure the file format is valid.');
+                    }
+                    pendingPassword = '';
+                };
+                reader.readAsText(file);
+            });
+
+            saveBtn.addEventListener('click', async () => {
+                const title = noteTitleInput.value.trim() || 'Untitled Note';
+                const content = noteContentTextarea.value.trim() || 'No content.';
+                const isSecret = secretToggle.checked;
+                const secretKey = secretKeyInput.value.trim();
+                const tagIds = Array.from(modalSelectedTags);
+
+                const notes = getNotes();
+
+                if (isSecret && !secretKey) {
+                    alert('يجب إدخال Encryption Key للملاحظات الPRIVATEة');
+                    return;
+                }
+
+                let processedContent = content;
+
+                if (isSecret) {
+                    try {
+                        processedContent = await encryptText(content, secretKey);
+                    } catch (e) {
+                        alert('An error occurred while encrypting the note');
+                        return;
+                    }
+                }
+
+                if (currentNoteId) {
+                    const noteIndex = notes.findIndex(note => note.id === currentNoteId);
+                    if (noteIndex !== -1) {
+                        notes[noteIndex].title = title;
+                        notes[noteIndex].content = processedContent;
+                        notes[noteIndex].isSecret = isSecret;
+                        notes[noteIndex].tagIds = tagIds;
+                        notes[noteIndex].updatedAt = Date.now();
+                        notes[noteIndex].pinned = !!notes[noteIndex].pinned;
+                    }
+                } else {
+                    const newNote = {
+                        id: generateId(),
+                        title: title,
+                        content: processedContent,
+                        isSecret: isSecret,
+                        tagIds: tagIds,
+                        createdAt: Date.now(),
+                        updatedAt: Date.now(),
+                        pinned: false
+                    };
+                    notes.unshift(newNote);
+                }
+
+                saveNotes(notes);
+                applyFilters();
+                hideModal();
+            });
+
+            decryptConfirmBtn.addEventListener('click', async () => {
+                const key = decryptKeyInput.value.trim();
+                if (!key) return;
+
+                try {
+                    const decryptedContent = await decryptText(currentDecryptNote.content, key);
+
+                    if (decryptedContent === null) {
+                        alert('Encryption Key غير صحيح');
+                        return;
+                    }
+
+                    readMoreTitle.textContent = currentDecryptNote.title;
+                    readMoreContent.textContent = decryptedContent;
+                    hideDecryptModal();
+                    readMoreModal.classList.add('show');
+                } catch (e) {
+                    alert('An error occurred while decrypting the note');
+                }
+            });
+
+            decryptCancelBtn.addEventListener('click', hideDecryptModal);
+
+            cancelBtn.addEventListener('click', hideModal);
+            readMoreCloseBtn.addEventListener('click', hideReadMoreModal);
+
+            const deleteNote = (id) => {
+                if (confirm('Are you sure you want to delete this note?')) {
+                    let notes = getNotes();
+                    notes = notes.filter(note => note.id !== id);
+                    saveNotes(notes);
+                    applyFilters();
+                }
+            };
+
+            searchInput.addEventListener('input', () => applyFilters());
+
+            // Close modals when clicking outside (tagsModal handled separately above)
+            [noteModal, readMoreModal, passwordModal, decryptModal].forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('show');
+                    }
+                });
+            });
+
+
+            // Optional install prompt when hosted in a browser context that supports PWA installation.
+            let deferredInstallPrompt = null;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredInstallPrompt = e;
+                const banner = document.getElementById('installBanner');
+                if (banner) banner.classList.add('show');
+            });
+            document.getElementById('installBtn')?.addEventListener('click', async () => {
+                if (!deferredInstallPrompt) {
+                    alert('On iPhone/iPad: use Share → Add to Home Screen. On Android: use the browser menu → Add to Home screen.');
+                    return;
+                }
+                deferredInstallPrompt.prompt();
+                await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+                document.getElementById('installBanner')?.classList.remove('show');
+            });
+            document.getElementById('dismissInstall')?.addEventListener('click', () => {
+                document.getElementById('installBanner')?.classList.remove('show');
+            });
+
+            // Keyboard shortcuts.
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+                    e.preventDefault(); showModal('add');
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault(); searchInput.focus();
+                }
+                if (e.key === '/' && !['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) {
+                    e.preventDefault(); searchInput.focus();
+                }
+                if (e.key === 'Escape') {
+                    [noteModal, readMoreModal, passwordModal, decryptModal, tagsModal].forEach(m => m.classList.remove('show'));
+                }
+            });
+
+            // Initialize app
+            renderFilterBar();
+            renderNotes();
+        });
+    </script>
+
+<div id="installBanner" class="install-banner">
+  <div><strong>Install Quick Notes</strong><span>Add it to your home screen for app-like access.</span></div>
+  <button id="installBtn" class="btn btn-primary">Install</button>
+  <button id="dismissInstall" class="btn btn-gray">×</button>
+</div>
+<style>
+.toolbar-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:1.25rem}
+.sort-control{display:flex;align-items:center;gap:7px;color:var(--text-muted);font-size:.8rem}
+.sort-control select{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:7px 9px}
+.pin-indicator{color:#e7c66b;font-size:.8rem}
+.fab{display:none;position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom));width:58px;height:58px;border:0;border-radius:50%;background:var(--accent);color:#102020;font-size:1.6rem;box-shadow:0 12px 30px rgba(0,0,0,.4);z-index:30}
+.install-banner{display:none;position:fixed;right:18px;bottom:18px;z-index:100;background:var(--bg-alt);border:1px solid var(--border);border-radius:14px;padding:12px 14px;box-shadow:0 16px 40px rgba(0,0,0,.4);gap:10px;align-items:center}
+.install-banner.show{display:flex}.install-banner strong{display:block;color:var(--text);font-size:.8rem}.install-banner span{display:block;color:var(--text-muted);font-size:.7rem}
+@media(max-width:700px){.toolbar-row{display:block}.sort-control{margin-top:9px}.fab{display:grid;place-items:center}.install-banner{left:16px;right:16px;bottom:16px}}
+</style>
+
+<script>
+/* PWA bootstrap */
+(() => {
+  if (!("serviceWorker" in navigator)) return;
+
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+
+      registration.addEventListener("updatefound", () => {
+        const worker = registration.installing;
+        if (!worker) return;
+        worker.addEventListener("statechange", () => {
+          if (worker.state === "installed" && navigator.serviceWorker.controller) {
+            const ok = confirm("A new version of Quick Notes is available. Reload now?");
+            if (ok) location.reload();
+          }
+        });
+      });
+    } catch (error) {
+      console.warn("PWA service worker registration failed:", error);
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
