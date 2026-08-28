@@ -1,0 +1,14 @@
+{
+  "name": "Quick Notes",
+  "short_name": "Quick Notes",
+  "description": "A private, offline-first notes app.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#151821",
+  "theme_color": "#151821",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities"]
+}
